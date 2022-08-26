@@ -1,0 +1,190 @@
+<html>
+    <head>
+        <title>jQuery Task 1</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    </head>
+
+    <script>
+        //Shuffle array function
+        function shuffle(array) {
+            let currentIndex = array.length; let randomIndex
+
+            // While there remain elements to shuffle...
+            while (currentIndex !== 0) {
+            // Pick a remaining element...
+            randomIndex = (Math.floor(Math.random() / 10) * currentIndex)
+            currentIndex--;
+
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]]
+            }
+
+            return array;
+            }
+        $(document).ready(function()
+        {
+            var crt=0;
+            //Get the list of categories
+            $.get('https://opentdb.com/api_category.php',
+            function(res)
+            {
+                //loop categories
+                $.each(res,function(i,val)
+                {  
+                    $.each(val,(i,value)=>
+                    {
+                        //Dynamically create buttons and add content to it and appending it to div
+                        var btn=document.createElement('button');
+                        btn.setAttribute("id",value['id']);  
+                        var id=value['id'];
+                        btn.innerHTML=`${value['name']}`; 
+                        $('#listCat').append(btn);
+                        $('#listCat').addClass('div');
+                    })
+                })
+                $("button").click(function()
+                {
+                    //Getting the text value of the button
+                    var btnCat=$(this).text();
+                    //display the category
+                    $('h3').text(`Category : ${btnCat}`);
+                    //Add id to the Button
+                    var id=$(this).attr('id');
+                    $("button").hide();
+                    
+                    //Adding input tag for getting the no of questions from user
+                    $('div').append('<input type="number" placeholder="Enter no of Questions..."/>');
+                    //Getting the number of questions from the user
+                    $('div').append('<button id="ViewQues">View Questions</button>');
+                    $("#ViewQues").click(function()
+                    {
+                        $('input').hide();
+                        var no_ques=$('input').val();
+                        // get the data for the selected category
+                        var url='https://opentdb.com/api.php?amount='+no_ques+'&category='+id;
+                        $.get(url,
+                        function(res)
+                        {
+                            $('#ViewQues').hide();
+                            //res will have the entire object
+                            var data=res['results'];
+                            //console.log(data);
+                            //loop through res for displaying content
+                            $.each(res['results'],(j,cate)=>
+                                {
+                                    //Check for number of options and display the options 
+                                    
+                                        var div_Ques=document.createElement('div');
+                            
+                                        var ques=document.createElement('p');
+                                        div_Ques.setAttribute('id',j);
+                                        //pushing all the options in a array and shuffle the values
+                                        var options=[];
+                                        options.push(cate['correct_answer'],...cate['incorrect_answers']);
+                                        ques.innerHTML=`${cate["question"]}`;
+                                        div_Ques.appendChild(ques);
+                                        
+                                        shuffle(options);
+                                        
+                                        //loop through the options array to display the options
+                                        
+                                        for(var count=0;count<options.length;count++)
+                                        {
+                                            var form_options=document.createElement('button');   
+                                            form_options.innerHTML=`${options[count]}`;
+                                            form_options.setAttribute('class','options')
+                                            div_Ques.appendChild(form_options);
+                                        }                                       
+                                        document.getElementById('listCat').appendChild(div_Ques);
+                                }); 
+                            
+                            //check whether the option selected is correct or not
+                            $('button').click(function()
+                            {
+                                //get the id of the button and access the object from array of objects
+                                var ques_no=$(this).parent().attr('id');
+                                var ans=$(this).text();
+                                //Check only the results (Array of objects)
+                        
+                                var ans_check=data[ques_no];
+                                
+                                if(ans_check["correct_answer"]==ans)
+                                {
+                                    $(this).css({
+                                        "background-color":"#50C878",
+                                        "color":"#fff"
+                                    })
+                                    $(this).siblings('button').attr("disabled","true"); 
+                                    crt=crt+1;
+                                }
+                                else{
+                                    $(this).css({
+                                        "background-color":"#FF4433",
+                                        "color":"#fff"
+                                    });
+                                    $(this).siblings('button').attr("disabled","true");
+                                    
+                                }                               
+                            }); 
+                            $('#listCat').append('<button id="EndTest">End Test</button>');
+                            $("#EndTest").click(
+                                ()=>
+                                {
+                                    $(this).hide();
+                                    $('div').hide();
+                                    alert("Your Score is : "+crt);
+                                    //console.log(crt);
+                                    window.location.reload();
+                                }
+                            )                           
+                        });                        
+                    });                
+                });
+            }); 
+                            
+        });
+        
+    </script>
+        <style>
+            button,input
+            {
+                width:100%;
+                height:50px;
+                margin:5px;
+                background-color:#eee;
+                border:none;
+                border-radius:8px;
+            }
+            .div
+            {
+                width:50%;
+                margin:auto;
+                margin-top: 10px;
+            }
+            #EndTest
+            {
+                background-color:#95A5A6;
+                color: #fff;
+            }
+            h3,h4,p
+            {
+                margin:auto;
+            }
+            #listCat
+            {
+                text-align: center;
+            }
+            h3{
+                margin: 10px;
+            }
+            
+        </style>
+    <body>
+        <h1 style="text-align:center">Quiz Game</h1>
+        <div id="listCat">
+            <h3></h3>
+        </div>
+    </body>
+</html>
+
